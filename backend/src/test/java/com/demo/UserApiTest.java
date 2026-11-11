@@ -1,6 +1,7 @@
 package com.demo;
 
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -63,7 +64,9 @@ class UserApiTest {
 
         mvc.perform(get("/api/auth/me").header("Authorization", token))
                 .andExpect(jsonPath("$.data.username").value("admin"))
-                .andExpect(jsonPath("$.data.permissions.length()").value(4));
+                // 加了组件后权限会变多，这里只检查用户管理的权限都在
+                .andExpect(jsonPath("$.data.permissions").value(hasItems(
+                        "system:user:list", "system:user:create", "system:user:update", "system:user:delete")));
 
         mvc.perform(get("/api/system/users").param("size", "5").header("Authorization", token))
                 .andExpect(status().isOk())

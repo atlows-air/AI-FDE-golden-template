@@ -9,7 +9,8 @@ import { ROOT } from './lib.mjs'
 const args = process.argv.slice(2)
 const nameIndex = args.indexOf('--name')
 const name = nameIndex >= 0 ? args[nameIndex + 1] : null
-const target = args.find((arg, index) => !arg.startsWith('--') && index !== nameIndex + 1)
+// 没有 --name 时 nameIndex 是 -1，不能用 nameIndex + 1 去排除参数
+const target = args.find((arg, index) => !arg.startsWith('--') && (nameIndex < 0 || index !== nameIndex + 1))
 
 if (!target) {
   console.error('用法：node scripts/new-demo.mjs <目标目录> [--name 系统名称]')

@@ -95,6 +95,8 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- 组件依赖：组件仓库的 add.mjs 会把组件需要的依赖插在这一行后面，不要删这行 -->
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

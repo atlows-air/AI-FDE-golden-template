@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /** 把异常统一转成 Result，HTTP 状态码与 Result.code 保持一致。 */
@@ -43,6 +44,11 @@ public class GlobalExceptionHandler {
             MethodArgumentTypeMismatchException.class})
     public ResponseEntity<Result<Void>> handleBadRequest(Exception e) {
         return respond(ResultCode.PARAM_ERROR, ResultCode.PARAM_ERROR.getMsg());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Result<Void>> handleTooLarge(MaxUploadSizeExceededException e) {
+        return respond(ResultCode.PARAM_ERROR, "上传的文件太大");
     }
 
     /** @PreAuthorize 校验不通过 */
