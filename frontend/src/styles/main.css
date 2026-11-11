@@ -1,0 +1,42 @@
+/* 全局样式只放基础设置。页面样式写在各自 .vue 的 <style scoped> 里，颜色和间距用 Element Plus 的 CSS 变量 */
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+  color: var(--el-text-color-primary);
+  background: var(--el-bg-color-page);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 页面内容卡片：列表页、表单页的外层统一用它 */
+.page-card {
+  padding: 16px 20px;
+  background: var(--el-bg-color);
+  border-radius: 8px;
+}
+
+/* 列表页顶部的搜索栏 + 操作按钮 */
+.page-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.page-toolbar .el-form-item {
+  margin-bottom: 0;
+}
+
+.page-pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}

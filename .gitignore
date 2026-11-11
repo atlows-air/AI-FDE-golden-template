@@ -1,0 +1,16 @@
+# 依赖和构建产物
+node_modules/
+dist/
+target/
+coverage/
+*.tsbuildinfo
+
+# 本机配置
+.idea/
+.vscode/
+*.iml
+.DS_Store
+.env.local
+
+# 日志
+*.log

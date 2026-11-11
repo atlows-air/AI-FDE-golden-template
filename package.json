@@ -1,0 +1,11 @@
+{
+  "name": "demo",
+  "private": true,
+  "description": "根目录只放统一入口脚本，前端依赖在 frontend/，后端在 backend/",
+  "scripts": {
+    "deps": "pnpm --dir frontend install",
+    "dev": "node scripts/dev.mjs",
+    "check": "node scripts/check.mjs",
+    "format": "pnpm --dir frontend format"
+  }
+}

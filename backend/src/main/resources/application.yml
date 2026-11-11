@@ -1,0 +1,40 @@
+app:
+  name: Demo
+  security:
+    # 部署时用环境变量 APP_TOKEN_SECRET 覆盖，至少 32 个字节
+    token-secret: ${APP_TOKEN_SECRET:change-me-demo-secret-at-least-32-bytes!!}
+    token-expire-minutes: 720
+
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: demo-backend
+  profiles:
+    # 没指定 profile 时用 mock：H2 内存库 + 种子数据，不用装数据库。连真实 MySQL 用 --spring.profiles.active=mysql。
+    # 注意：机器上设置了环境变量 SPRING_PROFILES_ACTIVE 时它会生效，所以启动脚本和测试都显式指定 profile。
+    default: mock
+  jackson:
+    time-zone: Asia/Shanghai
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    arg-name-based-constructor-auto-mapping: true
+  global-config:
+    banner: false
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  pattern:
+    # 每行日志带上 requestId，和返回体里的 requestId 对得上
+    console: "%d{HH:mm:ss.SSS} %-5level [%X{requestId:-}] %logger{36} - %msg%n"
