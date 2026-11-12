@@ -69,8 +69,40 @@ docs/                需求、交接说明等文档
 - 登录用 `login(page, 用户名, 密码)`，进菜单用 `openMenu(page, '一级', '二级')`。
 - 用例之间共用同一个 mock 数据库，用例不要依赖别的用例留下的数据；会改数据的用例自己造数据、自己清理，或者放在文件最后。
 - 找不到 Chrome 时：设环境变量 `E2E_CHANNEL=msedge` 用 Edge，或 `E2E_CHANNEL=bundled` 用 Playwright 自带的 Chromium（先运行 `pnpm --dir frontend exec playwright install chromium`）。
+- 默认端口 18080／15173 被别的程序占用时，`pnpm e2e` 自动换空闲端口；要固定端口设 `E2E_BACKEND_PORT`、`E2E_FRONTEND_PORT`。
 
 `pnpm e2e` 不包含在 `pnpm check` 里（要起浏览器，慢），交付前单独跑一次。
+
+### 多角色场景
+
+审批、工单这类要切换账号的演示，从 `./helpers` 导入 `test`（不是 `@playwright/test` 的），用它的 `loginAs`：每个账号一个独立的浏览器上下文，用例结束自动关闭。
+
+```ts
+import { expect } from '@playwright/test'
+import { openMenu, shot, test } from './helpers'
+
+test('经理通过后流转到财务', async ({ loginAs }) => {
+  const sales = await loginAs('zhangwei')
+  const manager = await loginAs('wangfang')
+  // sales、manager 各是一个 Page，按演示脚本交替操作
+})
+```
+
+- 演示脚本写的是哪个角色，用例就用哪个账号登录，不要全用 `admin` 走完：`admin` 权限最全，演示不出「每个人只看到自己的」。
+- 多个账号来回切换、每个用例自己造数据的场景，默认 30 秒超时不够，在 `test.describe` 里加 `test.setTimeout(90_000)`。
+
+### Element Plus 的几个坑
+
+这些都是真实 Demo 里第一次写用例时卡住的地方：
+
+| 现象 | 原因 | 写法 |
+|---|---|---|
+| `getByRole('link', { name })` 找不到 `el-link` | `el-link` 没有 `href` 时不算链接 | 点同一行里的按钮：`getByRole('row', { name: /合同名/ }).getByRole('button', { name: '详情' })`，或用 `getByText` |
+| 关掉抽屉或弹窗后，下一次点菜单超时 | `el-drawer`、`el-dialog` 还开着，遮罩挡住了点击 | 操作完按 `Escape` 并 `await expect(drawer).toBeHidden()` |
+| `ElMessageBox` 确认后马上截图，截到半透明的框 | 淡出动画还没结束 | 点确认后 `await expect(page.locator('.el-message-box')).toBeHidden()`；`shot()` 已经关掉动画 |
+| `toHaveCount(0)` 在查询还没返回时就通过了 | 断言比请求快 | 查询时等响应回来再断言，见 `smoke.spec.ts` 的 `searchUsers` |
+| 下拉框选不中 | `el-select` 的选项挂在 body 上，不在表单里 | 点开 `.el-select` 后用 `page.getByRole('option', { name: '销售合同' })` |
+| 上传文件 | `el-upload` 的 input 是隐藏的 | `locator('input[type=file]').setInputFiles(路径)`，演示文件放 `frontend/e2e/fixtures/`，不放真实客户文件 |
 
 ## mock 模式和 MySQL
 

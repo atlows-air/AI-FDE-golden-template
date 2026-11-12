@@ -2,15 +2,37 @@
 // 用法：node scripts/e2e.mjs [--reuse] [Playwright 参数...]
 //   --reuse   不启动服务，用已经在 http://127.0.0.1:5173 上跑着的（pnpm dev 开着的时候用，更快）
 //   其余参数原样交给 playwright，例如 pnpm e2e --grep 登录
-// 默认用 18080 / 15173 端口，不会和正在运行的 pnpm dev 冲突。用本机装的 Chrome（找不到时见 playwright.config.ts 里的说明）。
+// 默认用 18080 / 15173 端口，不会和正在运行的 pnpm dev 冲突；被别的程序占用时自动换一个空闲端口。
+// 要固定端口就设环境变量 E2E_BACKEND_PORT、E2E_FRONTEND_PORT。用本机装的 Chrome（找不到时见 playwright.config.ts 里的说明）。
+import net from 'node:net'
 import { FRONTEND, BACKEND, MVNW, killTree, run, waitExit } from './lib.mjs'
 
 const args = process.argv.slice(2)
 const reuse = args.includes('--reuse')
 const passthrough = args.filter((arg) => arg !== '--reuse')
 
-const backendPort = '18080'
-const frontendPort = reuse ? '5173' : '15173'
+const backendPort = await pickPort(process.env.E2E_BACKEND_PORT, 18080)
+const frontendPort = reuse ? '5173' : await pickPort(process.env.E2E_FRONTEND_PORT, 15173)
+
+/**
+ * 指定了端口就照用（被占用时由启动失败报出来）；没指定时先试默认端口，被占用就让系统分一个空闲的。
+ * 本机同时开着别的项目时，默认端口经常被占，无人值守运行不能因此停下。
+ */
+async function pickPort(fixed, preferred) {
+  if (fixed) return String(fixed)
+  const listen = (port) =>
+    new Promise((resolve) => {
+      const server = net.createServer()
+      server.once('error', () => resolve(null))
+      server.listen(port, '127.0.0.1', () => {
+        const { port: actual } = server.address()
+        server.close(() => resolve(actual))
+      })
+    })
+  const port = (await listen(preferred)) ?? (await listen(0))
+  if (port !== preferred) console.log(`[e2e] 端口 ${preferred} 被占用，改用 ${port}`)
+  return String(port)
+}
 const baseUrl = `http://127.0.0.1:${frontendPort}`
 
 let backend = null

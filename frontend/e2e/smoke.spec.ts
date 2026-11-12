@@ -1,5 +1,5 @@
-import { expect, test, type Page } from '@playwright/test'
-import { login, openMenu, shot } from './helpers'
+import { expect, type Page } from '@playwright/test'
+import { login, openMenu, shot, test } from './helpers'
 
 /**
  * 模板自带的冒烟测试：登录、权限、列表这几条主路径。新 Demo 的演示脚本照这个写，
@@ -47,5 +47,14 @@ test.describe('登录与用户管理', () => {
     await searchUsers(page, 'admin')
     await expect(page.getByRole('row', { name: /admin/ })).toBeVisible()
     await expect(page.getByRole('button', { name: '新增用户' })).toHaveCount(0)
+  })
+
+  test('两个账号同时登录互不影响：管理员看得到新增按钮，只读账号看不到', async ({ loginAs }) => {
+    const admin = await loginAs('admin')
+    const viewer = await loginAs('viewer')
+    await openMenu(admin, '系统管理', '用户管理')
+    await openMenu(viewer, '系统管理', '用户管理')
+    await expect(admin.getByRole('button', { name: '新增用户' })).toBeVisible()
+    await expect(viewer.getByRole('button', { name: '新增用户' })).toHaveCount(0)
   })
 })
