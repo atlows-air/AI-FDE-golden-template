@@ -6,6 +6,8 @@
     "deps": "pnpm --dir frontend install",
     "dev": "node scripts/dev.mjs",
     "check": "node scripts/check.mjs",
+    "e2e": "node scripts/e2e.mjs",
+    "preview": "node scripts/preview.mjs",
     "format": "pnpm --dir frontend format"
   }
 }

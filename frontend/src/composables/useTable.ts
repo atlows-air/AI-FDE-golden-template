@@ -19,10 +19,15 @@ export function useTable<T, F extends object>(
   const total = ref(0)
   const loading = ref(false)
 
+  // 请求序号：快速连续操作（刚进页面就搜索、连续翻页）时，先发出的请求可能后返回，不能让它盖掉后发出的结果
+  let latest = 0
+
   async function load() {
+    const mine = ++latest
     loading.value = true
     try {
       const page = await fetcher({ ...(query as F & PageQuery) })
+      if (mine !== latest) return
       rows.value = page.records as UnwrapRef<T[]>
       total.value = page.total
       // 删掉最后一页的最后一条后，回到上一页
@@ -31,7 +36,7 @@ export function useTable<T, F extends object>(
         await load()
       }
     } finally {
-      loading.value = false
+      if (mine === latest) loading.value = false
     }
   }
 

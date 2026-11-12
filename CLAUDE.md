@@ -9,6 +9,8 @@
 | 装依赖 | `pnpm deps`（前端；后端依赖由 Maven Wrapper 首次运行时下载） |
 | 本地启动 | `pnpm dev`：后端 mock 模式 http://127.0.0.1:8080，前端 http://127.0.0.1:5173 |
 | 全部检查 | `pnpm check`：后端编译和测试，前端类型、lint、格式、单测、构建 |
+| 端到端测试 | `pnpm e2e`：自动启动后端和前端（18080 / 15173），用本机 Chrome 跑 `frontend/e2e/` 下的用例，截图存到 `docs/acceptance/screenshots/`。`pnpm dev` 开着时用 `pnpm e2e --reuse` 更快 |
+| 预览环境 | `pnpm preview`：构建后用生产方式启动，打印同一网络里别人也能打开的地址（mock 数据和演示账号，只在内网用） |
 | 格式化 | `pnpm format` |
 
 演示账号：`admin / admin123`（全部权限），`viewer / demo123`（只读）。接口文档：http://127.0.0.1:8080/swagger-ui.html
@@ -56,6 +58,19 @@ docs/                需求、交接说明等文档
 - **样式**：用 Element Plus 组件和它的 CSS 变量（`var(--el-...)`），列表页外层用 `.page-card`、`.page-toolbar`、`.page-pagination`。不引入其他 UI 库或 CSS 框架。
 - **依赖**：不引入模板里没有的框架或大型依赖。确实需要时先问。
 - **配置**：密钥、数据库密码走环境变量（见 `application.yml` 里的 `${...}`），不写死在代码里。
+
+## 端到端测试
+
+演示脚本的每一步都要有一条 Playwright 用例，不能只靠人眼走一遍：
+
+- 一个场景一个文件，放在 `frontend/e2e/s1-xxx.spec.ts`，文件头注释写明对应 brief 的哪个场景。照 `smoke.spec.ts` 写。
+- 每一步是「一次操作 + 一次对结果的断言」，断言要写演示脚本里「看到什么」的内容，不要只断言页面没报错。
+- 关键结果用 `shot(page, 's1-step2-xxx')` 截图，名字和演示脚本步骤对应，交接说明里引用。
+- 登录用 `login(page, 用户名, 密码)`，进菜单用 `openMenu(page, '一级', '二级')`。
+- 用例之间共用同一个 mock 数据库，用例不要依赖别的用例留下的数据；会改数据的用例自己造数据、自己清理，或者放在文件最后。
+- 找不到 Chrome 时：设环境变量 `E2E_CHANNEL=msedge` 用 Edge，或 `E2E_CHANNEL=bundled` 用 Playwright 自带的 Chromium（先运行 `pnpm --dir frontend exec playwright install chromium`）。
+
+`pnpm e2e` 不包含在 `pnpm check` 里（要起浏览器，慢），交付前单独跑一次。
 
 ## mock 模式和 MySQL
 

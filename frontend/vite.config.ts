@@ -5,6 +5,8 @@ import { defineConfig } from 'vitest/config'
 // 后端地址。默认本机 8080，可以用环境变量 VITE_API_TARGET 改
 const apiTarget = process.env.VITE_API_TARGET ?? 'http://127.0.0.1:8080'
 
+const proxy = { '/api': { target: apiTarget, changeOrigin: true } }
+
 export default defineConfig({
   plugins: [vue()],
   resolve: {
@@ -13,10 +15,10 @@ export default defineConfig({
   server: {
     port: 5173,
     // 开发时 /api 转发到后端，前端代码里只写相对路径 /api/...
-    proxy: {
-      '/api': { target: apiTarget, changeOrigin: true },
-    },
+    proxy,
   },
+  // 预览（vite preview，pnpm preview 用）同样把 /api 转发到后端
+  preview: { proxy },
   build: {
     rollupOptions: {
       output: {

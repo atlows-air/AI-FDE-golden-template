@@ -14,3 +14,6 @@ coverage/
 
 # 日志
 *.log
+
+# 端到端测试的失败截图和 trace（验收截图 docs/acceptance/screenshots/ 要提交）
+docs/acceptance/test-results/
