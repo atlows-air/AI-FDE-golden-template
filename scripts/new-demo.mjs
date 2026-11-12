@@ -45,6 +45,10 @@ if (name) {
   replaceIn(path.join(dest, 'backend/src/main/resources/application.yml'), '  name: Demo\n', `  name: ${name}\n`)
 }
 
+// 记下这个项目是从模板的哪一版创建的，转正和升级模板时用得到。
+// 组件安装脚本也写同一个文件，它会保留这里的 template 字段
+writeFileSync(path.join(dest, 'components.json'), JSON.stringify({ template: templateVersion(), installed: [] }, null, 2) + '\n')
+
 const git = (...gitArgs) => spawnSync('git', gitArgs, { cwd: dest, stdio: 'inherit' })
 if (git('init', '-q').status === 0) {
   git('add', '-A')
@@ -55,6 +59,17 @@ if (git('init', '-q').status === 0) {
 
 console.log(`已创建：${dest}`)
 console.log('下一步：pnpm deps 安装依赖，然后 pnpm dev 启动')
+
+/** 模板当前的 git 提交；模板有没提交的改动时标出来，那样的版本号对不上实际内容 */
+function templateVersion() {
+  const read = (...gitArgs) => {
+    const result = spawnSync('git', gitArgs, { cwd: ROOT, encoding: 'utf8' })
+    return result.status === 0 ? result.stdout.trim() : null
+  }
+  const version = read('rev-parse', '--short', 'HEAD')
+  const dirty = version !== null && Boolean(read('status', '--porcelain'))
+  return { version, dirty, createdAt: new Date().toISOString() }
+}
 
 function replaceIn(file, from, to) {
   const content = readFileSync(file, 'utf8')
